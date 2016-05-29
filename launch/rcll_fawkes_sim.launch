@@ -1,0 +1,6 @@
+<launch>
+	<node name="rcll_fawkes_sim" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
+		<param name="fawkes_host" type="string" value="127.0.0.1" />
+		<param name="fawkes_port" type="int" value="1921" />
+	</node>
+</launch>

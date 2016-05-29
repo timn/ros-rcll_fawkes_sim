@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <name>rcll_fawkes_sim</name>
+  <version>0.1.0</version>
+  <description>RCLL simulation access through Fawkes</description>
+
+  <author>Tim Niemueller</author>
+  <maintainer email="niemueller@kbsg.rwth-aachen.de">Tim Niemueller</maintainer>
+
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>GPLv2+</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rcll_fawkes_sim_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <run_depend>rcll_fawkes_sim_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+
+</package>
