@@ -104,7 +104,11 @@ srv_cb_navgraph_gen(rcll_fawkes_sim_msgs::NavgraphWithMPSGenerate::Request  &req
 		const rcll_fawkes_sim_msgs::NavgraphMPSStation &mps = req.mps_stations[i];
 		fawkes::NavGraphWithMPSGeneratorInterface::UpdateStationByTagMessage *upm =
 			new fawkes::NavGraphWithMPSGeneratorInterface::UpdateStationByTagMessage();
+#ifdef HAVE_OLD_NAVGRAPH_GENMPS_INTERFACE
+		upm->set_id(mps.name.c_str());
+#else
 		upm->set_name(mps.name.c_str());
+#endif
 		upm->set_side(ros_to_fawkes_mps_side(mps.marker_side));
 		upm->set_frame(mps.marker_frame.c_str());
 		upm->set_tag_translation(0, mps.marker_pose.position.x);
