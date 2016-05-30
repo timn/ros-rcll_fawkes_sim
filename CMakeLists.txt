@@ -19,6 +19,15 @@ set(INTERFACES ZoneInterface Position3DInterface TagVisionInterface RobotinoLigh
 find_package(Fawkes COMPONENTS CPP11 core interface blackboard ${INTERFACES})
 if (NOT Fawkes_FOUND)
 	message(FATAL "Fawkes could not be found")
+else()
+	set(NAVIFFILE "${Fawkes_BASEDIR}/src/plugins/navgraph-generator-mps/interfaces/NavGraphWithMPSGeneratorInterface.xml")
+	if (EXISTS ${NAVIFFILE})
+		FILE(READ ${NAVIFFILE} TMPTXT)
+		STRING(FIND "${TMPTXT}" "name=\"id\"" matchres)
+		if (NOT ${matchres} EQUAL -1)
+			set(CFLAGS_EXTRA "-DHAVE_OLD_NAVGRAPH_GENMPS_INTERFACE")
+		endif()
+	endif()
 endif()
 
 
@@ -75,7 +84,7 @@ add_executable(rcll_fawkes_sim src/rcll_fawkes_sim_node.cpp)
 # Use Fawkes' protobuf_comm
 set_target_properties(rcll_fawkes_sim PROPERTIES
   INCLUDE_DIRECTORIES "${Fawkes_INCLUDE_DIRS};${catkin_INCLUDE_DIRS}"
-  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS}"
+  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
   LINK_FLAGS "${Fawkes_LFLAGS}"
   LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
   INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
