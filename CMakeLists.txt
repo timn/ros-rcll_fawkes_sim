@@ -15,7 +15,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-set(INTERFACES ZoneInterface Position3DInterface TagVisionInterface RobotinoLightInterface NavGraphWithMPSGeneratorInterface)
+set(INTERFACES ZoneInterface Position3DInterface TagVisionInterface RobotinoLightInterface NavGraphWithMPSGeneratorInterface SkillerInterface)
 find_package(Fawkes COMPONENTS CPP11 core interface blackboard ${INTERFACES})
 if (NOT Fawkes_FOUND)
 	message(FATAL "Fawkes could not be found")
@@ -83,6 +83,19 @@ add_executable(rcll_fawkes_sim src/rcll_fawkes_sim_node.cpp)
 
 # Use Fawkes' protobuf_comm
 set_target_properties(rcll_fawkes_sim PROPERTIES
+  INCLUDE_DIRECTORIES "${Fawkes_INCLUDE_DIRS};${catkin_INCLUDE_DIRS}"
+  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
+  LINK_FLAGS "${Fawkes_LFLAGS}"
+  LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
+  INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+  BUILD_WITH_INSTALL_RPATH TRUE)
+
+## Declare a C++ executable
+add_executable(fawkes_skiller src/fawkes_skiller_node.cpp)
+
+# Use Fawkes' protobuf_comm
+set_target_properties(fawkes_skiller PROPERTIES
   INCLUDE_DIRECTORIES "${Fawkes_INCLUDE_DIRS};${catkin_INCLUDE_DIRS}"
   COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
   LINK_FLAGS "${Fawkes_LFLAGS}"
