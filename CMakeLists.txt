@@ -105,3 +105,16 @@ set_target_properties(fawkes_skiller PROPERTIES
   INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
   INSTALL_RPATH_USE_LINK_PATH TRUE
   BUILD_WITH_INSTALL_RPATH TRUE)
+
+## Declare a C++ executable
+add_executable(rcll_beacon_sender src/rcll_beacon_sender_node.cpp)
+
+# Use Fawkes' protobuf_comm
+set_target_properties(rcll_beacon_sender PROPERTIES
+  INCLUDE_DIRECTORIES "${Fawkes_INCLUDE_DIRS};${catkin_INCLUDE_DIRS}"
+  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
+  LINK_FLAGS "${Fawkes_LFLAGS}"
+  LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
+  INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+  BUILD_WITH_INSTALL_RPATH TRUE)
