@@ -1,0 +1,21 @@
+<launch>
+	<!--  ***** Robot  1 ***** -->
+	<node ns="robot1" name="rcll_fawkes_sim_1" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
+		<param name="fawkes_host" type="string" value="127.0.0.1" />
+		<param name="fawkes_port" type="int" value="1921" />
+	</node>
+
+	<!--  ***** Robot  2 ***** -->
+	<node ns="robot2" name="rcll_fawkes_sim_2" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
+		<param name="fawkes_host" type="string" value="127.0.0.1" />
+		<param name="fawkes_port" type="int" value="1922" />
+	</node>
+
+	<!--  ***** Robot  3 ***** -->
+	<node ns="robot3" name="rcll_fawkes_sim_3" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
+		<param name="fawkes_host" type="string" value="127.0.0.1" />
+		<param name="fawkes_port" type="int" value="1923" />
+	</node>
+
+	
+</launch>
