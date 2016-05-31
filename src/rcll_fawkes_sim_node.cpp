@@ -35,6 +35,7 @@
 #include <rcll_fawkes_sim_msgs/MPSMarkerArray.h>
 #include <rcll_fawkes_sim_msgs/MPSLightState.h>
 #include <rcll_fawkes_sim_msgs/NavgraphWithMPSGenerate.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <memory>
 
@@ -56,10 +57,12 @@ fawkes::TagVisionInterface  *ifc_tag_vision_;
 std::array<fawkes::Position3DInterface *, 16> ifcs_tag_pos_;
 fawkes::RobotinoLightInterface  *ifc_machine_signal_;
 fawkes::NavGraphWithMPSGeneratorInterface *ifc_navgraph_gen_;
+fawkes::Position3DInterface *ifc_pose_;
 
 ros::Publisher pub_expl_zone_info_;
 ros::Publisher pub_mps_marker_array_;
 ros::Publisher pub_mps_light_state_;
+ros::Publisher pub_pose_;
 ros::ServiceServer srv_navgraph_gen_;
 
 int
@@ -205,7 +208,25 @@ class DataPasser : public fawkes::BlackBoardInterfaceListener
 	virtual void bb_interface_data_changed(fawkes::Interface *interface) throw()
 	{
 		interface->read();
-		if (strcmp(interface->uid(), ifc_zone_->uid()) == 0) {
+		if (strcmp(interface->uid(), ifc_pose_->uid()) == 0) {
+			const fawkes::Time *ts = ifc_pose_->timestamp();
+			geometry_msgs::PoseWithCovarianceStamped p;
+			p.header.frame_id = ifc_pose_->frame();
+			p.header.stamp.sec = ts->get_sec();
+			p.header.stamp.nsec = ts->get_nsec();
+			p.pose.pose.position.x = ifc_pose_->translation(0);
+			p.pose.pose.position.y = ifc_pose_->translation(1);
+			p.pose.pose.orientation.x = ifc_pose_->rotation(0);
+			p.pose.pose.orientation.y = ifc_pose_->rotation(1);
+			p.pose.pose.orientation.z = ifc_pose_->rotation(2);
+			p.pose.pose.orientation.w = ifc_pose_->rotation(3);
+
+			for (int i = 0; i < ifc_pose_->maxlenof_covariance(); ++i) {
+				p.pose.covariance[i] = ifc_pose_->covariance(i);
+			}
+			pub_pose_.publish(p);
+			
+		} else if (strcmp(interface->uid(), ifc_zone_->uid()) == 0) {
 			rcll_fawkes_sim_msgs::ExplorationZoneInfo rezi;
 			rezi.result = rcll_fawkes_sim_msgs::ExplorationZoneInfo::MPS_IN_ZONE_UNKNOWN;
 			switch (ifc_zone_->search_state()) {
@@ -287,10 +308,12 @@ main(int argc, char **argv)
 	ifc_machine_signal_ = blackboard_->open_for_reading<fawkes::RobotinoLightInterface>("/machine-signal/best");
 	ifc_navgraph_gen_ =
 		blackboard_->open_for_reading<fawkes::NavGraphWithMPSGeneratorInterface>("/navgraph-generator-mps");
-
+	ifc_pose_ = blackboard_->open_for_reading<fawkes::Position3DInterface>("Pose");
+	
 	dp->add(ifc_zone_);
 	dp->add(ifc_tag_vision_);
 	dp->add(ifc_machine_signal_);
+	dp->add(ifc_pose_);
 
 	// Setup ROS topics
 	pub_expl_zone_info_ =
@@ -299,6 +322,8 @@ main(int argc, char **argv)
 		n.advertise<rcll_fawkes_sim_msgs::MPSMarkerArray>("rcll_sim/mps_marker_array", 10);
 	pub_mps_light_state_ =
 		n.advertise<rcll_fawkes_sim_msgs::MPSLightState>("rcll_sim/mps_light_state", 10);
+	pub_pose_ =
+		n.advertise<geometry_msgs::PoseWithCovarianceStamped>("rcll_sim/amcl_pose", 10);
 
 	blackboard_->register_listener(dp.get(), fawkes::BlackBoard::BBIL_FLAG_DATA);
 
