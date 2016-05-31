@@ -6,6 +6,7 @@ project(rcll_fawkes_sim)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rcll_fawkes_sim_msgs
+	rcll_ros_msgs
 	fawkes_msgs
 	geometry_msgs
   roscpp
