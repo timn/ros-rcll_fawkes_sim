@@ -1,0 +1,6 @@
+<launch>
+	<node name="$(optenv NODE_NAME fawkes_skiller)" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
+		<param name="fawkes_host" type="string" value="$(optenv FAWKES_HOST 127.0.0.1)" />
+		<param name="fawkes_port" type="int" value="$(optenv FAWKES_PORT 1921)" />
+	</node>
+</launch>
