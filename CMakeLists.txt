@@ -7,6 +7,7 @@ project(rcll_fawkes_sim)
 find_package(catkin REQUIRED COMPONENTS
   rcll_fawkes_sim_msgs
 	fawkes_msgs
+	geometry_msgs
   roscpp
 )
 
