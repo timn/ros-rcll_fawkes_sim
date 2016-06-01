@@ -24,5 +24,6 @@
   <run_depend>fawkes_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>rcll_refbox_peer</run_depend>
 
 </package>
