@@ -34,8 +34,27 @@ void cb_pose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	last_pose_ = *msg;
 }
 
-void cb_timer(const ros::WallTimerEvent& event)
+void
+init_service_client(ros::NodeHandle &n)
 {
+	if (ros::service::waitForService("rcll/send_beacon", ros::Duration(5.0))) {
+		ROS_INFO("Got service, creating service client");
+		scl_send_beacon_ =
+			n.serviceClient<rcll_ros_msgs::SendBeaconSignal>("rcll/send_beacon", /* persistent */ true);
+	}
+}
+
+void cb_timer(const ros::WallTimerEvent& event, ros::NodeHandle &n)
+{
+	if (! scl_send_beacon_.isValid()) {
+		ROS_WARN("Beacon service client disconnected, retrying now");
+		init_service_client(n);
+	}
+	if (! scl_send_beacon_.isValid()) {
+		ROS_WARN("Beacon service client disconnected, retrying later");
+		return;
+	}
+
 	rcll_ros_msgs::SendBeaconSignal sbs;
 	sbs.request.header.seq = ++seq_num_;
 	ros::WallTime now = ros::WallTime::now();
@@ -43,9 +62,12 @@ void cb_timer(const ros::WallTimerEvent& event)
 	sbs.request.header.stamp.nsec = now.nsec;
 	sbs.request.pose.pose = last_pose_.pose.pose;
 	sbs.request.pose.header = last_pose_.header;
-	scl_send_beacon_.call(sbs);
-	if (! sbs.response.ok) {
-		ROS_WARN("Failed to send beacon: %s", sbs.response.error_msg.c_str());
+	if (scl_send_beacon_.call(sbs)) {
+		if (! sbs.response.ok) {
+			ROS_WARN("Failed to send beacon: %s", sbs.response.error_msg.c_str());
+		}
+	} else {
+		ROS_ERROR("Failed to call beacon service");
 	}
 }
 
@@ -60,14 +82,13 @@ main(int argc, char **argv)
 
 	seq_num_ = 0;
 
-	scl_send_beacon_ =
-		n.serviceClient<rcll_ros_msgs::SendBeaconSignal>("rcll/send_beacon", /* persistent */ true);
+	init_service_client(n);
 
 	ros::Subscriber sub_pose =
 		n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("rcll_sim/amcl_pose", 10, cb_pose);
 
 	ros::WallTimer timer =
-		n.createWallTimer(ros::WallDuration(1.0), cb_timer);
+		n.createWallTimer(ros::WallDuration(1.0), boost::bind(cb_timer, _1, boost::ref(n)));
 
   ros::spin();
   
