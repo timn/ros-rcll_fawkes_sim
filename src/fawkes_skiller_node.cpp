@@ -83,6 +83,11 @@ class RosSkillerNode
 			std::string error_msg = "Replaced by new goal";
 			as_goal_.setAborted(create_result(error_msg), error_msg);
 		}
+    if (! blackboard_ || !blackboard_->is_alive()) {
+      std::string error_msg = "Blackboard not connected";
+      goal.setAborted(create_result(error_msg), error_msg);
+      return;
+    }
 		as_goal_      = goal;
 		goal_         = goal.getGoal()->skillstring;
 		exec_request_ = true;
@@ -282,19 +287,38 @@ main(int argc, char **argv)
 	GET_PRIV_PARAM(fawkes_host);
 	GET_PRIV_PARAM(fawkes_port);
 
-	blackboard_ =
-		std::make_shared<fawkes::RemoteBlackBoard>(cfg_fawkes_host_.c_str(), cfg_fawkes_port_);
+	std::shared_ptr<RosSkillerNode> ros_skiller_node;
 
+	try {
+		blackboard_ =
+			std::make_shared<fawkes::RemoteBlackBoard>(cfg_fawkes_host_.c_str(), cfg_fawkes_port_);
+		ros_skiller_node = std::make_shared<RosSkillerNode>(&n, blackboard_);
+		ros_skiller_node->init();
+	} catch (fawkes::Exception &e) {
+		ROS_WARN("%s: Initial connection request failed, will keep trying", ros::this_node::getName().c_str());
+	}
 
-	RosSkillerNode ros_skiller_node(&n, blackboard_);
-	ros_skiller_node.init();
-	
 	while (ros::ok()) {
-		ros_skiller_node.loop();
+		if (!blackboard_) {
+			try {
+				blackboard_ =
+					std::make_shared<fawkes::RemoteBlackBoard>(cfg_fawkes_host_.c_str(), cfg_fawkes_port_);
+				ros_skiller_node = std::make_shared<RosSkillerNode>(&n, blackboard_);
+				ros_skiller_node->init();
+				ROS_INFO("%s: Blackboard connected", ros::this_node::getName().c_str());
+			} catch (fawkes::Exception &e) {}
+		} else if (! blackboard_->is_alive()) {
+			if (blackboard_->try_aliveness_restore()) {
+				ROS_INFO("%s: Blackboard re-connected", ros::this_node::getName().c_str());
+			}
+		} else {
+			ros_skiller_node->loop();
+		}
+
 		ros::getGlobalCallbackQueue()->callAvailable(ros::WallDuration(0.1));
 	}
 
-	ros_skiller_node.finalize();
+	ros_skiller_node->finalize();
 
 	return 0;
 }
