@@ -39,7 +39,7 @@
 #define GET_PRIV_PARAM(P)	  \
 	{ \
 		if (! ros::param::get("~" #P, cfg_ ## P ## _)) { \
-			ROS_ERROR("Failed to retrieve parameter " #P ", aborting"); \
+			ROS_ERROR("%s: Failed to retrieve parameter " #P ", aborting", ros::this_node::getName().c_str()); \
 			exit(-1); \
 		} \
 	}
@@ -109,7 +109,7 @@ class RosSkillerNode
 		try {
 			skiller_if_ = blackboard->open_for_reading<SkillerInterface>("Skiller");
 		} catch (const Exception &e) {
-			ROS_ERROR("Initialization failed, could not open Skiller interface");
+			ROS_ERROR("%s: Initialization failed, could not open Skiller interface", ros::this_node::getName().c_str());
 			throw;
 		}
 
@@ -128,7 +128,7 @@ class RosSkillerNode
 		try {
 			blackboard->close(skiller_if_);
 		} catch (Exception& e) {
-			ROS_ERROR("Closing interface failed!");
+			ROS_ERROR("%s: Closing interface failed!", ros::this_node::getName().c_str());
 		}
 		delete server_;
 	}
@@ -137,7 +137,7 @@ class RosSkillerNode
 	stop()
 	{
 		if (skiller_if_->exclusive_controller() != skiller_if_->serial()) {
-			ROS_WARN("Skill abortion requested, but currently not in control, acquiring");
+			ROS_WARN("%s: Skill abortion requested, but currently not in control, acquiring", ros::this_node::getName().c_str());
 			return;
 		}
 
@@ -160,21 +160,21 @@ class RosSkillerNode
 		// currently idle, release skiller control
 		if (!exec_running_ && !exec_request_
 		    && skiller_if_->exclusive_controller() == skiller_if_->serial()) {
-			ROS_INFO("No skill running and no skill requested, releasing control");
+			ROS_INFO("%s: No skill running and no skill requested, releasing control", ros::this_node::getName().c_str());
 			skiller_if_->msgq_enqueue(new SkillerInterface::ReleaseControlMessage());
 			return;
 		}
 
 		if (exec_request_) {
 			if (!skiller_if_->has_writer()) {
-				ROS_WARN("no writer for skiller, cannot execute skill");
+				ROS_WARN("%s: no writer for skiller, cannot execute skill", ros::this_node::getName().c_str());
 				stop();
 				return;
 			}
 
 			if (skiller_if_->exclusive_controller() != skiller_if_->serial()) {
 				// we need the skiller control, acquire it first
-				ROS_INFO("Skill execution requested, but currently not in control");
+				ROS_INFO("%s: Skill execution requested, but currently not in control", ros::this_node::getName().c_str());
 				skiller_if_->msgq_enqueue(new SkillerInterface::AcquireControlMessage());
 				return;
 			}
@@ -184,7 +184,7 @@ class RosSkillerNode
 				new SkillerInterface::ExecSkillMessage(goal_.c_str());
 			msg->ref();
 
-			ROS_INFO("Creating goal '%s'", goal_.c_str());
+			ROS_INFO("%s: Creating goal '%s'", ros::this_node::getName().c_str(), goal_.c_str());
 
 			try {
 				skiller_if_->msgq_enqueue(msg);
@@ -193,7 +193,7 @@ class RosSkillerNode
 				exec_skill_string_ = msg->skill_string();
 				loops_waited_ = 0;
 			} catch (Exception &e) {
-				ROS_WARN("Failed to execute skill, exception %s", e.what_no_backtrace());
+				ROS_WARN("%s: Failed to execute skill, exception %s", ros::this_node::getName().c_str(), e.what_no_backtrace());
 			}
 			msg->unref();
 
@@ -208,7 +208,7 @@ class RosSkillerNode
 				++loops_waited_;
 				if (loops_waited_ >= 5) {
 					// give up and abort
-					ROS_WARN("Skiller doesn't start, aborting");
+					ROS_WARN("%s: Skiller doesn't start, aborting", ros::this_node::getName().c_str());
 					std::string error_msg =  "Skiller doesn't start";
 					if (exec_as_) as_goal_.setAborted(create_result(error_msg), error_msg);
 					exec_running_ = false;
@@ -231,7 +231,7 @@ class RosSkillerNode
 						as_goal_.setAborted(create_result(error_msg), error_msg);
 					}
 					else {
-						ROS_WARN("Don't know what happened, but not running");
+						ROS_WARN("%s: Don't know what happened, but not running", ros::this_node::getName().c_str());
 					}
 				}
 			}

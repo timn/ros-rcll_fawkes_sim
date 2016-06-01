@@ -42,7 +42,7 @@
 #define GET_PRIV_PARAM(P)	  \
 	{ \
 		if (! ros::param::get("~" #P, cfg_ ## P ## _)) { \
-			ROS_ERROR("Failed to retrieve parameter " #P ", aborting"); \
+			ROS_ERROR("%s: Failed to retrieve parameter " #P ", aborting", ros::this_node::getName().c_str()); \
 			exit(-1); \
 		} \
 	}
@@ -201,7 +201,7 @@ class DataPasser : public fawkes::BlackBoardInterfaceListener
 	
 	void add(fawkes::Interface *interface)
 	{
-		ROS_INFO("Adding data interface %s", interface->uid());
+		ROS_INFO("%s: Adding data interface %s", ros::this_node::getName().c_str(), interface->uid());
 		bbil_add_data_interface(interface);
 	}
 	
@@ -241,7 +241,7 @@ class DataPasser : public fawkes::BlackBoardInterfaceListener
 				break;
 			}
 			rezi.marker_id = ifc_zone_->tag_id();
-			ROS_DEBUG("Publishing zone info, marker ID %i", ifc_zone_->tag_id());
+			ROS_DEBUG("%s: Publishing zone info, marker ID %i", ros::this_node::getName().c_str(), ifc_zone_->tag_id());
 			pub_expl_zone_info_.publish(rezi);
 		} else if (strcmp(interface->uid(), ifc_tag_vision_->uid()) == 0) {
 			rcll_fawkes_sim_msgs::MPSMarkerArray rma;
