@@ -1,21 +1,53 @@
 <launch>
+	
+	<!-- ~~~~~ Arguments ~~~~~ -->
+	<arg name="fawkes_host_r1" default="127.0.0.1" />
+	<arg name="fawkes_host_r2" default="$(arg fawkes_host_r1)" />
+	<arg name="fawkes_host_r3" default="$(arg fawkes_host_r1)" />
+	<arg name="fawkes_port_r1" default="1921" />
+	<arg name="fawkes_port_r2" default="1922" />
+	<arg name="fawkes_port_r3" default="1923" />
+
 	<!--  ***** Robot  1 ***** -->
 	<node ns="robot1" name="rcll_fawkes_sim_1" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
-		<param name="fawkes_host" type="string" value="127.0.0.1" />
-		<param name="fawkes_port" type="int" value="1921" />
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r1)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r1)" />
+	</node>
+
+	<node ns="robot1" name="rcll_beacon_sender_1" pkg="rcll_fawkes_sim" type="rcll_beacon_sender" output="screen">
+	</node>
+
+	<node ns="robot1" name="fawkes_skiller_1" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r1)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r1)" />
 	</node>
 
 	<!--  ***** Robot  2 ***** -->
 	<node ns="robot2" name="rcll_fawkes_sim_2" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
-		<param name="fawkes_host" type="string" value="127.0.0.1" />
-		<param name="fawkes_port" type="int" value="1922" />
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r2)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r2)" />
+	</node>
+
+	<node ns="robot2" name="rcll_beacon_sender_2" pkg="rcll_fawkes_sim" type="rcll_beacon_sender" output="screen">
+	</node>
+
+	<node ns="robot2" name="fawkes_skiller_2" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r2)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r2)" />
 	</node>
 
 	<!--  ***** Robot  3 ***** -->
 	<node ns="robot3" name="rcll_fawkes_sim_3" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
-		<param name="fawkes_host" type="string" value="127.0.0.1" />
-		<param name="fawkes_port" type="int" value="1923" />
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r3)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r3)" />
 	</node>
 
-	
+	<node ns="robot3" name="rcll_beacon_sender_3" pkg="rcll_fawkes_sim" type="rcll_beacon_sender" output="screen">
+	</node>
+
+	<node ns="robot3" name="fawkes_skiller_3" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r3)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r3)" />
+	</node>
+
 </launch>
