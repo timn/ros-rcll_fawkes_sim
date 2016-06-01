@@ -38,7 +38,9 @@ void cb_timer(const ros::WallTimerEvent& event)
 {
 	rcll_ros_msgs::SendBeaconSignal sbs;
 	sbs.request.header.seq = ++seq_num_;
-	sbs.request.header.stamp = ros::Time::now();
+	ros::WallTime now = ros::WallTime::now();
+	sbs.request.header.stamp.sec  = now.sec;
+	sbs.request.header.stamp.nsec = now.nsec;
 	sbs.request.pose.pose = last_pose_.pose.pose;
 	sbs.request.pose.header = last_pose_.header;
 	scl_send_beacon_.call(sbs);
