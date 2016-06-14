@@ -1,6 +1,18 @@
 <launch>
-	<node name="$(optenv NODE_NAME rcll_fawkes_sim)" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
-		<param name="fawkes_host" type="string" value="$(optenv FAWKES_HOST 127.0.0.1)" />
-		<param name="fawkes_port" type="int" value="$(optenv FAWKES_PORT 1921)" />
+
+	<arg name="fawkes_host_r1" default="127.0.0.1" />
+	<arg name="fawkes_port_r1" default="1921" />
+
+	<node ns="robot1" name="rcll_fawkes_sim_1" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r1)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r1)" />
+	</node>
+
+	<node ns="robot1" name="rcll_beacon_sender_1" pkg="rcll_fawkes_sim" type="rcll_beacon_sender" output="screen">
+	</node>
+
+	<node ns="robot1" name="fawkes_skiller_1" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
+		<param name="fawkes_host" type="string" value="$(arg fawkes_host_r1)" />
+		<param name="fawkes_port" type="int" value="$(arg fawkes_port_r1)" />
 	</node>
 </launch>
