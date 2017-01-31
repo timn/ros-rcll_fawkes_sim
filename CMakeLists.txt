@@ -92,9 +92,11 @@ set_target_properties(rcll_fawkes_sim PROPERTIES
   INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
   INSTALL_RPATH_USE_LINK_PATH TRUE
   BUILD_WITH_INSTALL_RPATH TRUE)
+add_dependencies(rcll_fawkes_sim ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 add_executable(fawkes_skiller src/fawkes_skiller_node.cpp)
+add_dependencies(fawkes_skiller ${catkin_EXPORTED_TARGETS})
 
 # Use Fawkes' protobuf_comm
 set_target_properties(fawkes_skiller PROPERTIES
@@ -108,6 +110,7 @@ set_target_properties(fawkes_skiller PROPERTIES
 
 ## Declare a C++ executable
 add_executable(rcll_beacon_sender src/rcll_beacon_sender_node.cpp)
+add_dependencies(rcll_beacon_sender ${catkin_EXPORTED_TARGETS})
 
 # Use Fawkes' protobuf_comm
 set_target_properties(rcll_beacon_sender PROPERTIES
