@@ -142,7 +142,7 @@ class RosSkillerNode
 	stop()
 	{
 		if (skiller_if_->exclusive_controller() != skiller_if_->serial()) {
-			ROS_WARN("%s: Skill abortion requested, but currently not in control, acquiring", ros::this_node::getName().c_str());
+			ROS_ERROR("%s: Skill abortion requested, but not in control", ros::this_node::getName().c_str());
 			return;
 		}
 
@@ -179,7 +179,7 @@ class RosSkillerNode
 
 			if (skiller_if_->exclusive_controller() != skiller_if_->serial()) {
 				// we need the skiller control, acquire it first
-				ROS_INFO("%s: Skill execution requested, but currently not in control", ros::this_node::getName().c_str());
+				ROS_INFO("%s: Skill execution requested, acquiring control", ros::this_node::getName().c_str());
 				skiller_if_->msgq_enqueue(new SkillerInterface::AcquireControlMessage());
 				return;
 			}
