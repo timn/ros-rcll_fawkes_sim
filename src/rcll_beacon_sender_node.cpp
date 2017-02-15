@@ -47,11 +47,10 @@ init_service_client(ros::NodeHandle &n)
 void cb_timer(const ros::WallTimerEvent& event, ros::NodeHandle &n)
 {
 	if (! scl_send_beacon_.isValid()) {
-		ROS_WARN("Beacon service client disconnected, retrying now");
 		init_service_client(n);
 	}
 	if (! scl_send_beacon_.isValid()) {
-		ROS_WARN("Beacon service client disconnected, retrying later");
+		ROS_WARN_THROTTLE(30, "Beacon service client disconnected, retrying later");
 		return;
 	}
 
@@ -64,7 +63,7 @@ void cb_timer(const ros::WallTimerEvent& event, ros::NodeHandle &n)
 	sbs.request.pose.header = last_pose_.header;
 	if (scl_send_beacon_.call(sbs)) {
 		if (! sbs.response.ok) {
-			ROS_WARN("Failed to send beacon: %s", sbs.response.error_msg.c_str());
+			ROS_WARN_THROTTLE(30, "Failed to send beacon: %s", sbs.response.error_msg.c_str());
 		}
 	} else {
 		ROS_ERROR("Failed to call beacon service");
