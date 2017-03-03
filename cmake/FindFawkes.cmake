@@ -59,7 +59,7 @@ if (NOT FAWKES_DIR)
       version.h
       PATHS $ENV{HOME}/fawkes $ENV{HOME}/fawkes-robotino $ENV{HOME}/fawkes-athome
             $ENV{HOME}/robotics/fawkes $ENV{HOME}/robotics/fawkes-robotino
-            $ENV{HOME}/robotics/fawkes-athome
+            $ENV{HOME}/robotics/fawkes-athome /opt/fawkes-robotino
       PATH_SUFFIXES fawkes/src/libs/core src/libs/core
     )
   endif()
