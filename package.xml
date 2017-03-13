@@ -19,11 +19,13 @@
   <build_depend>fawkes_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
   <run_depend>rcll_fawkes_sim_msgs</run_depend>
   <run_depend>rcll_ros_msgs</run_depend>
   <run_depend>fawkes_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rcll_refbox_peer</run_depend>
+  <run_depend>tf</run_depend>
 
 </package>

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 	fawkes_msgs
 	geometry_msgs
   roscpp
+	tf
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -18,7 +19,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # find_package(Boost REQUIRED COMPONENTS system)
 
 set(INTERFACES ZoneInterface Position3DInterface TagVisionInterface RobotinoLightInterface NavGraphWithMPSGeneratorInterface SkillerInterface)
-find_package(Fawkes COMPONENTS CPP11 core interface blackboard ${INTERFACES})
+find_package(Fawkes COMPONENTS CPP11 core utils navgraph interface blackboard ${INTERFACES})
 if (NOT Fawkes_FOUND)
 	message(FATAL "Fawkes could not be found")
 else()
@@ -98,9 +99,21 @@ add_dependencies(rcll_fawkes_sim ${catkin_EXPORTED_TARGETS})
 add_executable(fawkes_skiller src/fawkes_skiller_node.cpp)
 add_dependencies(fawkes_skiller ${catkin_EXPORTED_TARGETS})
 
-# Use Fawkes' protobuf_comm
 set_target_properties(fawkes_skiller PROPERTIES
   INCLUDE_DIRECTORIES "${Fawkes_INCLUDE_DIRS};${catkin_INCLUDE_DIRS}"
+  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
+  LINK_FLAGS "${Fawkes_LFLAGS}"
+  LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
+  INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+  BUILD_WITH_INSTALL_RPATH TRUE)
+
+## Declare a C++ executable
+add_executable(fawkes_navgraph src/fawkes_navgraph_node.cpp)
+add_dependencies(fawkes_navgraph ${catkin_EXPORTED_TARGETS})
+
+set_target_properties(fawkes_navgraph PROPERTIES
+  INCLUDE_DIRECTORIES "${catkin_INCLUDE_DIRS};${Fawkes_INCLUDE_DIRS}"
   COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
   LINK_FLAGS "${Fawkes_LFLAGS}"
   LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
