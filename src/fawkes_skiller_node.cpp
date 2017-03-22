@@ -110,7 +110,8 @@ class RosSkillerNode
 		exec_request_ = false;
 		exec_running_ = false;
 		exec_as_      = false;
-
+		wait_release_ = 0;
+		
 		try {
 			skiller_if_ = blackboard->open_for_reading<SkillerInterface>("Skiller");
 		} catch (const Exception &e) {
@@ -163,10 +164,28 @@ class RosSkillerNode
 		skiller_if_->read();
 
 		// currently idle, release skiller control
-		if (!exec_running_ && !exec_request_
-		    && skiller_if_->exclusive_controller() == skiller_if_->serial()) {
-			ROS_INFO("%s: No skill running and no skill requested, releasing control", ros::this_node::getName().c_str());
+		if (!exec_running_ && !exec_request_ && wait_release_ == 0 &&
+		    skiller_if_->exclusive_controller() == skiller_if_->serial())
+		{
+			ROS_INFO("%s: No skill running and no skill requested, releasing control",
+			         ros::this_node::getName().c_str());
 			skiller_if_->msgq_enqueue(new SkillerInterface::ReleaseControlMessage());
+			wait_release_ = 1;
+			return;
+		}
+
+		if (wait_release_ > 0 &&
+		    skiller_if_->exclusive_controller() == skiller_if_->serial())
+		{
+			if (++wait_release_ % 10 == 0) {
+				ROS_WARN("%s: still waiting for exclusive control release", 
+				         ros::this_node::getName().c_str());
+			}
+			ros::WallDuration(0.1).sleep();
+			if (wait_release_ > 30) {
+				// Reset, will triggering another release
+				wait_release_ = 0;
+			}
 			return;
 		}
 
@@ -273,6 +292,8 @@ class RosSkillerNode
   unsigned int exec_msgid_;
   std::string exec_skill_string_;
   unsigned int loops_waited_;
+
+	unsigned int wait_release_;
 };
 
 
