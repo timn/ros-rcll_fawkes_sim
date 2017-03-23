@@ -49,11 +49,6 @@ using namespace fawkes;
 typedef actionlib::ActionServer<fawkes_msgs::ExecSkillAction> SkillerServer;
 
 
-std::string  cfg_fawkes_host_;
-int          cfg_fawkes_port_;
-
-std::shared_ptr<fawkes::BlackBoard> blackboard_;
-
 class RosSkillerNode
 {
  public:
@@ -78,12 +73,14 @@ class RosSkillerNode
 	void
 	action_goal_cb(SkillerServer::GoalHandle goal)
 	{
+		ROS_INFO("%s: Received goal to execute %s", ros::this_node::getName().c_str(),
+		         goal.getGoal()->skillstring.c_str());
 		std::lock_guard<std::mutex> lock(loop_mutex);
 		if (exec_running_ && exec_as_) {
 			std::string error_msg = "Replaced by new goal";
 			as_goal_.setAborted(create_result(error_msg), error_msg);
 		}
-    if (! blackboard_ || !blackboard_->is_alive()) {
+    if (! blackboard || !blackboard->is_alive()) {
       std::string error_msg = "Blackboard not connected";
       goal.setAborted(create_result(error_msg), error_msg);
       return;
@@ -93,6 +90,7 @@ class RosSkillerNode
 		exec_request_ = true;
 		exec_as_      = true;
 
+		ROS_INFO("%s: Accepting goal '%s'", ros::this_node::getName().c_str(), goal_.c_str());
 		goal.setAccepted();
 	}
 
@@ -136,6 +134,7 @@ class RosSkillerNode
 		} catch (Exception& e) {
 			ROS_ERROR("%s: Closing interface failed!", ros::this_node::getName().c_str());
 		}
+		pub_status_.shutdown();
 		delete server_;
 	}
 
@@ -177,8 +176,8 @@ class RosSkillerNode
 		if (wait_release_ > 0 &&
 		    skiller_if_->exclusive_controller() == skiller_if_->serial())
 		{
-			if (++wait_release_ % 10 == 0) {
-				ROS_WARN("%s: still waiting for exclusive control release", 
+			if (++wait_release_ % 50 == 0) {
+				ROS_WARN("%s: waiting for exclusive control release", 
 				         ros::this_node::getName().c_str());
 			}
 			ros::WallDuration(0.1).sleep();
@@ -191,8 +190,10 @@ class RosSkillerNode
 
 		if (exec_request_) {
 			if (!skiller_if_->has_writer()) {
-				ROS_WARN("%s: no writer for skiller, cannot execute skill", ros::this_node::getName().c_str());
+				std::string error_msg("no writer for skiller, cannot execute");
+				ROS_WARN("%s: %s", ros::this_node::getName().c_str(), error_msg.c_str());
 				stop();
+				as_goal_.setAborted(create_result(error_msg), error_msg);
 				return;
 			}
 
@@ -304,31 +305,33 @@ main(int argc, char **argv)
 
 	ros::NodeHandle n;
 
-	// Parameter parsing	
+	std::shared_ptr<RosSkillerNode> ros_skiller_node;
+	std::string  cfg_fawkes_host_;
+	int          cfg_fawkes_port_;
+	std::shared_ptr<fawkes::BlackBoard> blackboard_;
+
 	GET_PRIV_PARAM(fawkes_host);
 	GET_PRIV_PARAM(fawkes_port);
 
-	std::shared_ptr<RosSkillerNode> ros_skiller_node;
-
-	try {
-		blackboard_ =
-			std::make_shared<fawkes::RemoteBlackBoard>(cfg_fawkes_host_.c_str(), cfg_fawkes_port_);
-		ros_skiller_node = std::make_shared<RosSkillerNode>(&n, blackboard_);
-		ros_skiller_node->init();
-	} catch (fawkes::Exception &e) {
-		ROS_WARN("%s: Initial connection request failed, will keep trying", ros::this_node::getName().c_str());
-	}
-
 	while (ros::ok()) {
 		if (!blackboard_) {
+			ROS_WARN_THROTTLE(30, "%s: Not connected, retrying", ros::this_node::getName().c_str());
 			try {
 				blackboard_ =
 					std::make_shared<fawkes::RemoteBlackBoard>(cfg_fawkes_host_.c_str(), cfg_fawkes_port_);
 				ros_skiller_node = std::make_shared<RosSkillerNode>(&n, blackboard_);
 				ros_skiller_node->init();
-				ROS_INFO("%s: Blackboard connected", ros::this_node::getName().c_str());
-			} catch (fawkes::Exception &e) {}
+				ROS_INFO("%s: Blackboard connected and initialized", ros::this_node::getName().c_str());
+			} catch (fawkes::Exception &e) {
+				ROS_WARN_THROTTLE(10, "%s: Initialization failed, retrying", ros::this_node::getName().c_str());
+				if (ros_skiller_node) {
+					ros_skiller_node->finalize();
+				}
+				ros_skiller_node.reset();
+				blackboard_.reset();
+			}
 		} else if (! blackboard_->is_alive()) {
+			ROS_WARN_THROTTLE(30, "%s: blackboard connection lost, retrying", ros::this_node::getName().c_str());
 			if (blackboard_->try_aliveness_restore()) {
 				ROS_INFO("%s: Blackboard re-connected", ros::this_node::getName().c_str());
 			}
@@ -339,7 +342,7 @@ main(int argc, char **argv)
 		ros::getGlobalCallbackQueue()->callAvailable(ros::WallDuration(0.1));
 	}
 
-	ros_skiller_node->finalize();
+	if (ros_skiller_node) ros_skiller_node->finalize();
 
 	return 0;
 }
