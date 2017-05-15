@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="fawkes_navgraph_retriever" pkg="rcll_fawkes_sim"
+        type="fawkes_navgraph_retriever" respawn="true" output="screen">
+	  <param name="navgraph_file" value="$(optenv NAVGRAPH_FILE /tmp/navgraph-generated.yaml)" />
+  </node>
+</launch>
