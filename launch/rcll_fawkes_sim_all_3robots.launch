@@ -1,4 +1,5 @@
 <launch>
 	<include file="$(find rcll_refbox_peer)/launch/rcll_refbox_peer_3robots.launch" />
 	<include file="$(find rcll_fawkes_sim)/launch/rcll_fawkes_sim_3robots.launch" />
+	<include file="$(find rcll_fawkes_sim)/launch/rcll_fawkes_sim_navgraph.launch" />
 </launch>
