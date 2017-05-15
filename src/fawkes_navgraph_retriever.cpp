@@ -56,6 +56,7 @@ class NavGraphRosRetriever
 		if (boost::filesystem::exists(p)) {
 			boost::filesystem::remove(p);
 		}
+		boost::filesystem::create_directories(p.parent_path());
 
 		sub_navgraph_ = n.subscribe<fawkes_msgs::NavGraph>("navgraph", 10, &NavGraphRosRetriever::cb_navgraph, this);
 	}
