@@ -122,6 +122,19 @@ set_target_properties(fawkes_navgraph PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE)
 
 ## Declare a C++ executable
+add_executable(fawkes_navgraph_retriever src/fawkes_navgraph_retriever.cpp)
+add_dependencies(fawkes_navgraph_retriever ${catkin_EXPORTED_TARGETS})
+
+set_target_properties(fawkes_navgraph_retriever PROPERTIES
+  INCLUDE_DIRECTORIES "${catkin_INCLUDE_DIRS};${Fawkes_INCLUDE_DIRS}"
+  COMPILE_FLAGS "${Fawkes_CFLAGS} ${catkin_CFLAGS} ${CFLAGS_EXTRA}"
+  LINK_FLAGS "${Fawkes_LFLAGS}"
+  LINK_LIBRARIES "${Fawkes_LIBRARIES};${catkin_LIBRARIES}"
+  INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+  BUILD_WITH_INSTALL_RPATH TRUE)
+
+## Declare a C++ executable
 add_executable(rcll_beacon_sender src/rcll_beacon_sender_node.cpp)
 add_dependencies(rcll_beacon_sender ${catkin_EXPORTED_TARGETS})
 
@@ -140,7 +153,7 @@ set_target_properties(rcll_beacon_sender PROPERTIES
 ## Install ##
 #############
 
-install(TARGETS rcll_fawkes_sim rcll_beacon_sender fawkes_navgraph fawkes_skiller
+install(TARGETS rcll_fawkes_sim rcll_beacon_sender fawkes_navgraph fawkes_navgraph_retriever fawkes_skiller
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
