@@ -71,7 +71,10 @@ class NavGraphRosNode : public fawkes::FamListener
 		GET_CONFIG(privn, n, "base_frame_id", cfg_base_frame_);
 		GET_CONFIG(privn, n, "global_frame_id", cfg_global_frame_);
 
-		if (boost::filesystem::exists(cfg_navgraph_file_)) {
+		boost::filesystem::path p(cfg_navgraph_file_);
+		p = boost::filesystem::absolute(p);
+		cfg_navgraph_file_ = p.string();
+		if (boost::filesystem::exists(p)) {
 			navgraph = fawkes::LockPtr<fawkes::NavGraph>(fawkes::load_yaml_navgraph(cfg_navgraph_file_),
 			                                             /* recursive mutex */ true);
 			ROS_INFO("[F-NavGraph] Loaded navgraph from '%s': %zu nodes, %zu edges",
@@ -80,8 +83,13 @@ class NavGraphRosNode : public fawkes::FamListener
 			navgraph = fawkes::LockPtr<fawkes::NavGraph>(new fawkes::NavGraph("empty"), /* recursive mutex */ true);
 		}
 
+		boost::filesystem::create_directories(p.parent_path());
 		fam_ = new fawkes::FileAlterationMonitor();
-		fam_->watch_file(cfg_navgraph_file_.c_str());
+		fam_->add_filter((std::string("^") + p.filename().string() + "$").c_str());
+		printf("Watching dir %s\n", p.parent_path().string().c_str());
+		fam_->watch_dir(p.parent_path().string().c_str());
+		//printf("Watching file %s\n", cfg_navgraph_file_.c_str());
+		//fam_->watch_file(cfg_navgraph_file_.c_str());
 		fam_->add_listener(this);
 
 		tf_listener = new TransformListenerExtended();
@@ -92,8 +100,11 @@ class NavGraphRosNode : public fawkes::FamListener
 		svs_get_pwcosts_ = n.advertiseService("navgraph/get_pairwise_costs",
 		                                      &NavGraphRosNode::svs_get_pwcosts_cb, this);
 
+		fam_timer_ =
+			n.createWallTimer(ros::WallDuration(1.0), &NavGraphRosNode::cb_fam_timer, this);
+
 		publish_graph();
-	}
+}
 
 	virtual ~NavGraphRosNode()
 	{
@@ -101,11 +112,20 @@ class NavGraphRosNode : public fawkes::FamListener
 		delete tf_listener;
 	}
 
-	virtual void fam_event(const char *filename, unsigned int mask)
+	virtual void
+	fam_event(const char *filename, unsigned int mask)
 	{
 		// The file will be ignored from now onwards, re-register
-		if (mask & FAM_IGNORED) {
-			fam_->watch_file(cfg_navgraph_file_.c_str());
+		// if (mask & FAM_IGNORED) {
+		// 	boost::filesystem::path p(cfg_navgraph_file_);
+		// 	fam_->watch_dir(p.parent_path().string().c_str());
+		// }
+
+		if (mask & FAM_DELETE) {
+			ROS_INFO("[F-NavGraph] Navgraph file deleted, clearing");
+			navgraph->clear();
+			publish_graph();
+			return;
 		}
 
 		if (mask & (FAM_MODIFY | FAM_IGNORED)) {
@@ -116,14 +136,23 @@ class NavGraphRosNode : public fawkes::FamListener
 					fawkes::LockPtr<fawkes::NavGraph>(fawkes::load_yaml_navgraph(cfg_navgraph_file_),
 					                                  /* recursive mutex */ true);
 				ROS_INFO("[F-NavGraph] Re-loaded navgraph from '%s': %zu nodes, %zu edges",
-				         cfg_navgraph_file_.c_str(), navgraph->nodes().size(), navgraph->edges().size());
+				         cfg_navgraph_file_.c_str(), new_graph->nodes().size(), new_graph->edges().size());
 				**navgraph = **new_graph;
 				publish_graph();
 			} catch (fawkes::Exception &e) {
 				ROS_WARN("[F-NavGraph] Loading new graph failed: %s", e.what());
 				return;
+			} catch (std::runtime_error &e) {
+				ROS_WARN("[F-NavGraph] Loading new graph failed: %s", e.what());
+				return;
 			}
 		}
+	}
+
+	void
+	cb_fam_timer(const ros::WallTimerEvent& event)
+	{
+		fam_->process_events();
 	}
 
 	void
@@ -321,6 +350,7 @@ class NavGraphRosNode : public fawkes::FamListener
   ros::Publisher pub_navgraph_;
   ros::ServiceServer svs_search_path_;
   ros::ServiceServer svs_get_pwcosts_;
+	ros::WallTimer     fam_timer_;
 
 	TransformListenerExtended *tf_listener;
 };
