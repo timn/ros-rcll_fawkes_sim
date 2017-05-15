@@ -135,6 +135,17 @@ set_target_properties(rcll_beacon_sender PROPERTIES
   INSTALL_RPATH_USE_LINK_PATH TRUE
   BUILD_WITH_INSTALL_RPATH TRUE)
 
+
+#############
+## Install ##
+#############
+
+install(TARGETS rcll_fawkes_sim rcll_beacon_sender fawkes_navgraph fawkes_skiller
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 # install launch files
 install(DIRECTORY launch
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/
