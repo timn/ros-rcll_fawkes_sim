@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-	<include file="$(find rcll_refbox_peer)/launch/rcll_refbox_peer.launch" />
-	<include file="$(find rcll_fawkes_sim)/launch/rcll_fawkes_sim.launch" />
-	<include file="$(find rcll_fawkes_sim)/launch/rcll_fawkes_sim_navgraph.launch" />
-</launch>
