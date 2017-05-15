@@ -134,3 +134,9 @@ set_target_properties(rcll_beacon_sender PROPERTIES
   INSTALL_RPATH "${Fawkes_LIBRARY_DIRS}"
   INSTALL_RPATH_USE_LINK_PATH TRUE
   BUILD_WITH_INSTALL_RPATH TRUE)
+
+# install launch files
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/
+)
+
