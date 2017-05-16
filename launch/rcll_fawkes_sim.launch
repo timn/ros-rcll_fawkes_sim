@@ -4,6 +4,10 @@
 	<arg name="robot_number" default="1" />
 	<arg name="fawkes_host" default="127.0.0.1" />
 	<arg name="fawkes_port" default="1921" />
+	<arg name="disable_navgraph" default="false" />
+	<arg name="navgraph_file" default="$(optenv NAVGRAPH_FILE /tmp/navgraph-generated.yaml)" />
+	<arg name="base_frame_id" default="$(optenv BASE_FRAME_ID base_link)" />
+	<arg name="global_frame_id" default="$(optenv GLOBAL_FRAME_ID map)" />
 
 	<node name="rcll_fawkes_sim_$(arg robot_number)" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
 		<param name="fawkes_host" type="string" value="$(arg fawkes_host)" />
@@ -17,4 +21,13 @@
 		<param name="fawkes_host" type="string" value="$(arg fawkes_host)" />
 		<param name="fawkes_port" type="int" value="$(arg fawkes_port)" />
 	</node>
+
+	<node name="fawkes_navgraph" pkg="rcll_fawkes_sim"
+	      type="fawkes_navgraph" respawn="true" output="screen"
+	      unless="$(arg disable_navgraph)">
+	  <param name="navgraph_file" value="$(arg navgraph_file)" />
+    <param name="base_frame_id" value="$(arg base_frame_id)" />
+    <param name="global_frame_id" value="$(arg global_frame_id)" />
+  </node>
+
 </launch>
