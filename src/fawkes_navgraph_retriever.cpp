@@ -48,7 +48,7 @@ class NavGraphRosRetriever
 		if (cfg_navgraph_file_.empty()) {
 			throw std::runtime_error("No navgraph file given");
 		}
-		
+
 		boost::filesystem::path p(cfg_navgraph_file_);
 		p = boost::filesystem::absolute(p);
 		cfg_navgraph_file_ = p.string();
@@ -58,7 +58,11 @@ class NavGraphRosRetriever
 		}
 		boost::filesystem::create_directories(p.parent_path());
 
+		sub_has_received_ = false;
 		sub_navgraph_ = n.subscribe<fawkes_msgs::NavGraph>("navgraph", 10, &NavGraphRosRetriever::cb_navgraph, this);
+
+		sub_init_timer_ =
+			n.createWallTimer(ros::WallDuration(5.0), &NavGraphRosRetriever::cb_sub_init_timer, this);
 	}
 
 	virtual ~NavGraphRosRetriever()
@@ -70,9 +74,31 @@ class NavGraphRosRetriever
 		}
 	}
 
+	/* This timer is a workaround for some ROS issues that fails (not so
+	 * infrequently as one would hope) to retrieve the initial message
+	 * from a latched publisher.
+	 *
+	 */
+	void
+	cb_sub_init_timer(const ros::WallTimerEvent& event)
+	{
+		if (! sub_has_received_) {
+			ROS_INFO("No navgraph received, yet. Re-subscribing to avoid stale latched publisher");
+			sub_navgraph_.shutdown();
+			sub_navgraph_ =
+				n.subscribe<fawkes_msgs::NavGraph>("navgraph", 10, &NavGraphRosRetriever::cb_navgraph, this);
+		}
+	}
+	
 	void
 	cb_navgraph(const fawkes_msgs::NavGraph::ConstPtr& msg)
 	{
+		if (! sub_has_received_) {
+			ROS_INFO("Initial navgraph received, disabling re-connect timer");
+			sub_has_received_ = true;
+			sub_init_timer_.stop();
+		}
+
 		fawkes::NavGraph n("received");
 		for (size_t i = 0; i < msg->nodes.size(); ++i) {
 			const fawkes_msgs::NavGraphNode &msg_node = msg->nodes[i];
@@ -111,6 +137,8 @@ class NavGraphRosRetriever
 	std::string cfg_navgraph_file_;
 
   ros::Subscriber sub_navgraph_;
+	ros::WallTimer  sub_init_timer_;
+	bool            sub_has_received_;
 };
 
 int
