@@ -8,14 +8,15 @@
 	<arg name="navgraph_file" default="$(optenv NAVGRAPH_FILE /tmp/navgraph-generated.yaml)" />
 	<arg name="base_frame_id" default="$(optenv BASE_FRAME_ID base_link)" />
 	<arg name="global_frame_id" default="$(optenv GLOBAL_FRAME_ID map)" />
+	<arg name="disable_beacon_sender" default="false" />
 
 	<node name="rcll_fawkes_sim_$(arg robot_number)" pkg="rcll_fawkes_sim" type="rcll_fawkes_sim" output="screen">
 		<param name="fawkes_host" type="string" value="$(arg fawkes_host)" />
 		<param name="fawkes_port" type="int" value="$(arg fawkes_port)" />
 	</node>
 
-	<node name="rcll_beacon_sender_$(arg robot_number)" pkg="rcll_fawkes_sim" type="rcll_beacon_sender" output="screen">
-	</node>
+	<node name="rcll_beacon_sender_$(arg robot_number)" pkg="rcll_fawkes_sim" type="rcll_beacon_sender"
+	      output="screen" unless="$(arg disable_beacon_sender)" />
 
 	<node name="fawkes_skiller_$(arg robot_number)" pkg="rcll_fawkes_sim" type="fawkes_skiller" output="screen">
 		<param name="fawkes_host" type="string" value="$(arg fawkes_host)" />
